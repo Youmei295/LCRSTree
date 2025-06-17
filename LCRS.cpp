@@ -80,59 +80,9 @@ Node* findNode(Node* root, int x)
     return NULL;
 }
 
-//Node* deleteNode(Node* root, Node* x)
-//{
-//    if(!root) return NULL;
-//    if(root==x)
-//    {
-//        if(root->nextSibling)
-//        {
-//            Node* temp=root; root=root->nextSibling;
-//            addDirectChild(root,temp->eldestChild);
-//            delete temp;
-//            return root;
-//        }
-//        else
-//        {
-//            root=root->eldestChild;
-//            root->eldestChild=root->nextSibling;
-//            root->nextSibling=NULL;
-//        }
-//    }
-//    Node* prev=root, *curr=root->nextSibling;
-//    queue<Node*> q;
-//    q.push(root);
-//    while(curr)
-//    {
-//        if(curr==x)
-//        {
-//            prev->nextSibling=curr->nextSibling;
-//            addDirectChild(prev,curr->eldestChild);
-//            delete curr;
-//            return root;
-//        }
-//        q.push(curr);
-//    }
-//    while(!q.empty())
-//    {
-//        Node* current=q.front();
-//        q.pop();
-//        while(current->eldestChild==x)
-//        {
-//            Node* temp=current; current=current->nextSibling;
-//            addDirectChild(current,temp->eldestChild);
-//            delete temp;
-//            return root;
-//        }
-//        if(current->eldestChild)
-//            for(Node* i=current->eldestChild;i;i=i->nextSibling)
-//                q.push(i);
-//
-//    }
-//    return root;
-//}
 
-Node* deleteUtil(Node* root)
+
+Node* deleteNode(Node* root)
 {
     if (root->nextSibling)
     {
@@ -142,11 +92,10 @@ Node* deleteUtil(Node* root)
     }
     else if (!root->nextSibling && root->eldestChild)
     {
-        addDirectChild(root, root->eldestChild->eldestChild);
-        Node* temp = root;
-        root = root->eldestChild;
-        root->eldestChild = root->nextSibling;
-        root->nextSibling = NULL;
+        Node* temp = root, *child=root->eldestChild;
+        root = child;
+        addDirectChild(root, child->nextSibling);
+        child->nextSibling = NULL;
         delete temp;
     }
     else
@@ -161,7 +110,7 @@ Node* deleteManyNode(Node* root, int x)
     if (!root) return NULL;
     while (root && root->data == x)
     {
-        root = deleteUtil(root);
+        root = deleteNode(root);
     }
     if (!root) return NULL;
     Node* prev = root, * curr = root->nextSibling;
@@ -188,9 +137,9 @@ Node* deleteManyNode(Node* root, int x)
     {
         Node* current = q.front();
         q.pop();
-        while (current && current->eldestChild && current->eldestChild->data == x)
+        while (current->eldestChild && current->eldestChild->data == x)
         {
-            current->eldestChild = deleteUtil(current->eldestChild);
+            current->eldestChild = deleteNode(current->eldestChild);
         }
         if (!current || !current->eldestChild) continue;
         Node* prev = current->eldestChild, * curr = current->eldestChild->nextSibling;
@@ -243,6 +192,68 @@ void printTree(Node* root)
     cout << endl;
 }
 
+Node* generalAdd(Node* root, int key)
+{
+    Node* newNode = new Node(key);
+    if (!root) return newNode;
+    queue<Node* > q;
+    q.push(root);
+    while (!q.empty())
+    {
+        Node* curr = q.front();
+        q.pop();
+        if (!curr->eldestChild)
+        {
+            curr->eldestChild = newNode; return root;
+        }
+        if (!curr->nextSibling)
+        {
+            curr->nextSibling = newNode; return root;
+        }
+        q.push(curr->eldestChild);
+        q.push(curr->nextSibling);
+    }
+    return root;
+}
+
+void levelPrint(Node* root)
+{   
+    if (!root) return;
+    vector<int> levelLength(1000,0);
+    levelLength[0]=1;
+    int levelFlag=0;
+    int counter=0;
+    cout << root->data << endl;
+    queue<Node*> q;
+    q.push(root);
+    while (!q.empty())
+    {
+        Node* curr = q.front()->eldestChild;
+        q.pop();
+        counter++;
+        int temp = 0;
+        while (curr)
+        {
+            q.push(curr);
+            cout << curr->data << " ";
+            curr=curr->nextSibling;
+            temp++;
+        }
+        levelLength[levelFlag + 1] += temp;
+        if (counter == levelLength[levelFlag])
+        {
+            levelFlag++;
+            counter = 0;
+            cout << endl;
+        }
+        else
+        {
+            cout << "/ ";
+        }
+    }
+
+}
+
 int main()
 {
     // Create root node with duplicate value
@@ -282,14 +293,14 @@ int main()
 
     // Print tree in level order before deletion
     cout << "Level order traversal before deletion:" << endl;
-    printTree(root);
+    levelPrint(root);
 
     // Delete all nodes with value 3
     root = deleteManyNode(root, 3);
 
     // Print tree in level order after deletion
     cout << "Level order traversal after deleting all 3s:" << endl;
-    printTree(root);
+    levelPrint(root);
 
     // Clean up memory (not exhaustive, for demo only)
     // In production, implement a proper tree destructor
