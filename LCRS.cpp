@@ -1,6 +1,5 @@
 #include <iostream>
 #include <queue>
-
 using namespace std;
 
 struct Node
@@ -15,6 +14,7 @@ struct Node
         nextSibling = NULL;
     }
 };
+
 Node* addDirectChild(Node* parent, int newData)
 {
     Node* newChild = new Node(newData);
@@ -165,6 +165,21 @@ Node* deleteManyNode(Node* root, int x)
     return root;
 }
 
+int getHeight(Node* root)
+{
+    if (!root) return 0;
+    int height = 0;
+    Node* curr = root->eldestChild;
+    while (curr)
+    {
+        int childHeight = getHeight(curr);
+        if (childHeight > height)
+            height = childHeight;
+        curr = curr->nextSibling;
+    }
+    return height + 1;
+}
+
 void printTree(Node* root)
 {
     queue<Node*> q;
@@ -219,7 +234,8 @@ Node* generalAdd(Node* root, int key)
 void levelPrint(Node* root)
 {   
     if (!root) return;
-    vector<int> levelLength(1000,0);
+    int height = getHeight(root);
+    vector<int> levelLength(height,0);
     levelLength[0]=1;
     int levelFlag=0;
     int counter=0;
@@ -239,10 +255,10 @@ void levelPrint(Node* root)
             curr=curr->nextSibling;
             temp++;
         }
-        levelLength[levelFlag + 1] += temp;
+        if(levelFlag+1<height) levelLength[levelFlag + 1] += temp;
         if (counter == levelLength[levelFlag])
         {
-            levelFlag++;
+            if(levelFlag+1<height) levelFlag++;
             counter = 0;
             cout << endl;
         }
